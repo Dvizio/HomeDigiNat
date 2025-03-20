@@ -1,6 +1,10 @@
 package com.example.homediginat;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.BroadcastReceiver;
 import com.google.gson.Gson;
@@ -9,6 +13,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+
+import java.util.Collections;
 import java.util.Random;
 import android.content.pm.ResolveInfo;
 import android.graphics.drawable.Drawable;
@@ -52,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
     private RelativeLayout rootLayout;
     private TextView storageInfo ;
     private GridView gridView;
+    private RecyclerView recyclerView;
 
     private TextView externalStorageText;
 
@@ -75,13 +82,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+
         setContentView(R.layout.activity_main);
-
-
-
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        setContentView(R.layout.activity_main);
+
         prefs = getSharedPreferences("launcher_prefs", MODE_PRIVATE);
         rootLayout = findViewById(R.id.root_layout);
         storageInfo = findViewById(R.id.storage);
@@ -89,15 +94,59 @@ public class MainActivity extends AppCompatActivity {
         rotateButton = findViewById(R.id.rotate);
         batteryLevelTextView = findViewById(R.id.batteryLevelText);
         externalStorageText = findViewById(R.id.externalStorageText);
-        gridView = findViewById(R.id.gridView);
+        recyclerView = findViewById(R.id.recyclerView);
+        int numberOfColumns = 2; // Or however many you want
+        recyclerView.setLayoutManager(new GridLayoutManager(this, numberOfColumns));
         cardList = loadCardList();
-        adapter = new CardAdapter(this, (ArrayList<CardModel>) cardList, new CardAdapter.DeleteCallback() {
+        adapter = new CardAdapter(
+                this,
+                new ArrayList<>(cardList),
+                () -> {
+                    saveCardList();
+                   // Delete callback, do something when a card is deleted
+                    // Example: refresh UI or show message
+                },
+                selectedCard -> {
+                    // Item click callback, open folder in Solid Explorer
+                    openFolderInSolidExplorer(selectedCard.getCard2File());
+                }
+        );
+        recyclerView.setAdapter(adapter);
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(
+                ItemTouchHelper.UP | ItemTouchHelper.DOWN | ItemTouchHelper.START | ItemTouchHelper.END, 0) {
+
             @Override
-            public void onDelete() {
-                saveCardList(); // Save the updated card list
+            public boolean onMove(@NonNull RecyclerView recyclerView,
+                                  @NonNull RecyclerView.ViewHolder viewHolder,
+                                  @NonNull RecyclerView.ViewHolder target) {
+
+                int fromPos = viewHolder.getAdapterPosition();
+                int toPos = target.getAdapterPosition();
+
+                // Swap items in your data set
+                Collections.swap(cardList, fromPos, toPos);
+
+                // Notify adapter of item moved
+                adapter.notifyItemMoved(fromPos, toPos);
+
+                // Optionally, save the updated list here or later when leaving the screen
+                return true;
+            }
+
+            @Override
+            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                // No swipe action
+            }
+
+            @Override
+            public boolean isLongPressDragEnabled() {
+                return true; // Enable long press to drag and drop
             }
         });
-        gridView.setAdapter(adapter);
+
+        // Attach ItemTouchHelper to your RecyclerView
+        itemTouchHelper.attachToRecyclerView(recyclerView);
+
 
         IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         registerReceiver(batteryReceiver, filter);
@@ -108,13 +157,13 @@ public class MainActivity extends AppCompatActivity {
         filter1.addDataScheme("file");
 
         registerReceiver(storageReceiver, filter1);
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                CardModel selectedCard = cardList.get(position);
-                openFolderInSolidExplorer(selectedCard.getCard2File());
-            }
-        });
+//        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//            @Override
+//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//                CardModel selectedCard = cardList.get(position);
+//                openFolderInSolidExplorer(selectedCard.getCard2File());
+//            }
+//        });
 
 
 
@@ -194,16 +243,25 @@ public class MainActivity extends AppCompatActivity {
                 CardModel newCard = new CardModel(folderName, R.drawable.ic_launcher_foreground, fullFolderPath);
 
                 // Add to list and save
-                cardList.add(newCard);
+                adapter.addCard(newCard);
                 saveCardList();
-                adapter.notifyDataSetChanged();
             }
         }
+    }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        saveCardList();
     }
     private String getFolderName(Uri uri) {
         String docId = DocumentsContract.getTreeDocumentId(uri);
         String[] split = docId.split(":");
-        return split.length >= 2 ? split[1] : split[0]; // Folder name fallback
+
+        String pathPart = split.length >= 2 ? split[1] : split[0];
+
+        // Split the path on "/" to get the last folder name
+        String[] pathSegments = pathPart.split("/");
+        return pathSegments[pathSegments.length - 1]; // Get the last segment
     }
     private List<CardModel> loadCardList() {
         String json = prefs.getString(CARD_LIST_KEY, null);

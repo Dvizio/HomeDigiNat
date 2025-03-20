@@ -42,8 +42,8 @@
         android:text="Battery Level"
         android:textColor="#FFFFFF"
         android:textSize="20sp" />
-    <GridView
-        android:id="@+id/gridView"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
         android:layout_marginTop="150dp"
         android:gravity="center_horizontal"
         android:layout_width="match_parent"

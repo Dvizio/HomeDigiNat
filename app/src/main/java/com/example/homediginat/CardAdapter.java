@@ -5,70 +5,105 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.ArrayList;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
 
-public class CardAdapter extends ArrayAdapter<CardModel> {
+import java.util.ArrayList;
+import java.util.List;
+
+public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> {
 
     private Context context;
-    private ArrayList<CardModel> cardList;
-    private DeleteCallback deleteCallback; // Callback to notify Activity on deletion
+    private List<CardModel> cardList;
+    private DeleteCallback deleteCallback;
+    private OnItemClickListener onItemClickListener; // 👈 Added item click listener
 
-    // Constructor with delete callback
-    public CardAdapter(Context context, ArrayList<CardModel> list, DeleteCallback deleteCallback) {
-        super(context, 0, list);
+    public CardAdapter(Context context, ArrayList<CardModel> cardList, DeleteCallback deleteCallback, OnItemClickListener onItemClickListener) {
         this.context = context;
-        this.cardList = list;
+        this.cardList = cardList;
         this.deleteCallback = deleteCallback;
+        this.onItemClickListener = onItemClickListener;
+    }
+
+    @NonNull
+    @Override
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View itemView = LayoutInflater.from(context).inflate(R.layout.card_item, parent, false);
+        return new ViewHolder(itemView);
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        CardModel model = cardList.get(position);
 
-        View itemView = convertView;
-        if (itemView == null) {
-            itemView = LayoutInflater.from(getContext()).inflate(R.layout.card_item, parent, false);
-        }
+        holder.textView.setText(model.getName());
+        holder.imageView.setImageResource(model.getImage());
 
-        CardModel model = getItem(position);
-
-        TextView textView = itemView.findViewById(R.id.cardText);
-        ImageView imageView = itemView.findViewById(R.id.cardImage);
-        ImageButton deleteButton = itemView.findViewById(R.id.deleteButton);
-
-        if (model != null) {
-            textView.setText(model.getName());
-            imageView.setImageResource(model.getImage());
-
-            deleteButton.setOnClickListener(v -> {
-                // Show a confirmation dialog before deletion
-                new AlertDialog.Builder(context)
-                        .setTitle("Delete Folder Card")
-                        .setMessage("Are you sure you want to delete this folder card?")
-                        .setPositiveButton("Delete", (dialog, which) -> {
-                            cardList.remove(position);     // Remove from list
-                            notifyDataSetChanged();        // Refresh GridView
+        // 🔥 Set up the delete button
+        holder.deleteButton.setOnClickListener(v -> {
+            new AlertDialog.Builder(context)
+                    .setTitle("Delete Folder Card")
+                    .setMessage("Are you sure you want to delete this folder card?")
+                    .setPositiveButton("Delete", (dialog, which) -> {
+                        int currentPosition = holder.getAdapterPosition();
+                        if (currentPosition != RecyclerView.NO_POSITION) {
+                            cardList.remove(currentPosition);
+                            notifyItemRemoved(currentPosition);
                             Toast.makeText(context, "Folder deleted", Toast.LENGTH_SHORT).show();
 
                             if (deleteCallback != null) {
-                                deleteCallback.onDelete(); // Notify activity to save the list
+                                deleteCallback.onDelete();
                             }
-                        })
-                        .setNegativeButton("Cancel", null)
-                        .show();
-            });
-        }
+                        }
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+        });
 
-        return itemView;
+        // Set up item click listener on the whole card
+        holder.itemView.setOnClickListener(v -> {
+            int currentPosition = holder.getAdapterPosition();
+            if (currentPosition != RecyclerView.NO_POSITION && onItemClickListener != null) {
+                CardModel selectedCard = cardList.get(currentPosition);
+                onItemClickListener.onItemClick(selectedCard);
+            }
+        });
     }
 
-    // Interface for notifying Activity to perform actions (like save)
+    @Override
+    public int getItemCount() {
+        return cardList.size();
+    }
+    public void addCard(CardModel card) {
+        cardList.add(card);
+        notifyItemInserted(cardList.size() - 1);
+    }
+
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        TextView textView;
+        ImageView imageView;
+        ImageButton deleteButton;
+
+        public ViewHolder(@NonNull View itemView) {
+            super(itemView);
+            textView = itemView.findViewById(R.id.cardText);
+            imageView = itemView.findViewById(R.id.cardImage);
+            deleteButton = itemView.findViewById(R.id.deleteButton);
+        }
+    }
+
+    // Callback interface for delete events
     public interface DeleteCallback {
         void onDelete();
+    }
+
+    // item click events
+    public interface OnItemClickListener {
+        void onItemClick(CardModel card);
     }
 }
