@@ -10,17 +10,29 @@
     app:cardUseCompatPadding="true">
 
     <LinearLayout
+        android:id="@+id/cardLayout"
         android:layout_width="200dp"
         android:layout_height="200dp"
         android:layout_margin="1dp"
         android:background="@color/Black_transparent"
         android:orientation="vertical">
 
+        <ImageButton
+            android:id="@+id/deleteButton"
+            android:layout_gravity="right"
+            android:layout_marginTop="10dp"
+            android:layout_marginRight="10dp"
+            android:contentDescription="Delete Shortcut"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@android:drawable/ic_menu_close_clear_cancel" />
+
         <ImageView
             android:id="@+id/cardImage"
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:layout_gravity="center"
+            android:layout_marginTop="15dp"
             android:src="@mipmap/ic_launcher" />
 
         <TextView

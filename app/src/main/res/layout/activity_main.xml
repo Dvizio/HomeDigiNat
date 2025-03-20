@@ -39,13 +39,12 @@
         android:layout_alignParentBottom="true"
         android:layout_marginStart="53dp"
         android:layout_marginTop="59dp"
-
         android:text="Battery Level"
         android:textColor="#FFFFFF"
         android:textSize="20sp" />
     <GridView
         android:id="@+id/gridView"
-        android:layout_marginTop="40dp"
+        android:layout_marginTop="150dp"
         android:gravity="center_horizontal"
         android:layout_width="match_parent"
         android:layout_height="400dp"
@@ -57,7 +56,7 @@
         android:layout_width="match_parent"
         android:id="@+id/linear_layout"
         android:layout_height="wrap_content"
-        android:layout_marginTop="500dp"
+        android:layout_marginTop="600dp"
         android:gravity="center_horizontal"
         android:orientation="vertical"
         android:padding="20dp"
@@ -65,7 +64,7 @@
 
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="100dp"
+            android:layout_height="50dp"
             android:id="@+id/externalStorageBox"
             android:layout_margin="10dp"
             android:background="@drawable/square_box_background">
@@ -76,13 +75,13 @@
                 android:layout_height="match_parent"
                 android:gravity="center"
                 android:text="External Storage Disconnected"
-                android:textSize="30sp" />
+                android:textSize="15sp" />
         </FrameLayout>
 
         <!-- First TextView in a square box -->
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="100dp"
+            android:layout_height="50dp"
             android:layout_margin="10dp"
             android:background="@drawable/square_box_background">
 
@@ -92,42 +91,11 @@
                 android:layout_height="match_parent"
                 android:gravity="center"
                 android:text="Storage"
-                android:textSize="30sp" />
+                android:textSize="15sp" />
         </FrameLayout>
 
         <!-- Second TextView in a square box -->
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:id="@+id/folderBox1"
-            android:layout_height="100dp"
-            android:layout_margin="10dp"
-            android:background="@drawable/square_box_background">
 
-            <TextView
-                android:id="@+id/folderBoxText1"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:text="TBA"
-                android:textSize="30sp" />
-        </FrameLayout>
-
-        <!-- Third TextView in a square box -->
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:id="@+id/folderBox2"
-            android:layout_height="100dp"
-            android:layout_margin="10dp"
-            android:background="@drawable/square_box_background">
-
-            <TextView
-                android:id="@+id/folderBoxText2"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:text="TBA"
-                android:textSize="30sp" />
-        </FrameLayout>
     </LinearLayout>
 
 

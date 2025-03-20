@@ -52,21 +52,17 @@ public class MainActivity extends AppCompatActivity {
     private RelativeLayout rootLayout;
     private TextView storageInfo ;
     private GridView gridView;
-    private TextView folderBoxText1;
+
     private TextView externalStorageText;
-    private TextView folderBoxText2;
+
     private TextView batteryLevelTextView;
     private FloatingActionButton rotateButton;
     private FloatingActionButton addDirectory;
-    private FrameLayout folderBox1;
-    private FrameLayout folderBox2;
     private SharedPreferences prefs;
     private List<CardModel> cardList ;
     private Gson gson = new Gson();
     CardAdapter adapter;
 
-
-    private int currentFolderBeingSet = 0;
     private boolean isRotated = false;
 
     class Pac{
@@ -91,15 +87,16 @@ public class MainActivity extends AppCompatActivity {
         storageInfo = findViewById(R.id.storage);
         addDirectory = findViewById(R.id.addDirectory);
         rotateButton = findViewById(R.id.rotate);
-        folderBox1 = findViewById(R.id.folderBox1);
-        folderBox2 = findViewById(R.id.folderBox2);
-        folderBoxText1 = findViewById(R.id.folderBoxText1);
-        folderBoxText2 = findViewById(R.id.folderBoxText2);
         batteryLevelTextView = findViewById(R.id.batteryLevelText);
         externalStorageText = findViewById(R.id.externalStorageText);
         gridView = findViewById(R.id.gridView);
         cardList = loadCardList();
-        adapter = new CardAdapter(this,(ArrayList<CardModel>) cardList);
+        adapter = new CardAdapter(this, (ArrayList<CardModel>) cardList, new CardAdapter.DeleteCallback() {
+            @Override
+            public void onDelete() {
+                saveCardList(); // Save the updated card list
+            }
+        });
         gridView.setAdapter(adapter);
 
         IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
@@ -133,54 +130,17 @@ public class MainActivity extends AppCompatActivity {
 
         File documentsFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
         File picturesFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-        folderBoxText2.setText(picturesFolder.getName());
-        folderBoxText1.setText(documentsFolder.getName());
-        String defaultDocumentsPath = documentsFolder.getAbsolutePath();
-        String defaultPicturesPath = picturesFolder.getAbsolutePath();
-
-        if (!prefs.contains("folder1_path")) {
-            defaultDocumentsPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath();
-            prefs.edit().putString("folder1_path", defaultDocumentsPath).apply();
-        }
-        if (!prefs.contains("folder2_path")) {
-            defaultPicturesPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getAbsolutePath();
-            prefs.edit().putString("folder2_path", defaultPicturesPath).apply();
-        }
 
         addDirectory.setOnClickListener(v -> {
             selectFolder();  // Call your add card function
         });
 
-        //Folder box opener
-        folderBox1.setOnClickListener(v -> {
-            String folder1Path = prefs.getString("folder1_path", "");
-            openFolderInSolidExplorer(folder1Path);
-        });
-        folderBox2.setOnClickListener(v -> {
-            String folder2Path = prefs.getString("folder2_path", "");
-            openFolderInSolidExplorer(folder2Path);
-        });
         storageInfo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 openSolidExplorer();
             }
         });
-
-        folderBox1.setOnLongClickListener(v -> {
-            currentFolderBeingSet = 1; // You can track which button was pressed
-            selectFolder();
-            folderBoxText1.setText(documentsFolder.getName());
-            return true;
-        });
-
-        folderBox2.setOnLongClickListener(v -> {
-            currentFolderBeingSet = 2;
-            selectFolder();
-            folderBoxText2.setText(picturesFolder.getName());
-            return true;
-        });
-
 
 
         //TODO fix rotateButton
@@ -361,57 +321,11 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private void updateLayoutForPortrait() {
-        // Update rootLayout (RelativeLayout)
-        RelativeLayout.LayoutParams rootParams = (RelativeLayout.LayoutParams) rootLayout.getLayoutParams();
-        rootParams.width = RelativeLayout.LayoutParams.MATCH_PARENT;
-        rootParams.height = RelativeLayout.LayoutParams.MATCH_PARENT;
-        rootLayout.setLayoutParams(rootParams);
-
-        // Update LinearLayout (if it exists)
-        LinearLayout linearLayout = findViewById(R.id.linear_layout); // Replace with your LinearLayout ID
-        if (linearLayout != null) {
-            LinearLayout.LayoutParams linearParams = (LinearLayout.LayoutParams) linearLayout.getLayoutParams();
-            linearParams.width = LinearLayout.LayoutParams.MATCH_PARENT;
-            linearParams.height = LinearLayout.LayoutParams.WRAP_CONTENT;
-            linearLayout.setLayoutParams(linearParams);
-            linearLayout.setOrientation(LinearLayout.VERTICAL);
-        }
-
-        // Update FrameLayouts (if they exist)
-        FrameLayout frameLayout1 = findViewById(R.id.folderBox1); // Replace with your FrameLayout ID
-        if (frameLayout1 != null) {
-            FrameLayout.LayoutParams frameParams = (FrameLayout.LayoutParams) frameLayout1.getLayoutParams();
-            frameParams.width = FrameLayout.LayoutParams.MATCH_PARENT;
-            frameParams.height = 100; // Adjust height as needed
-            frameLayout1.setLayoutParams(frameParams);
-        }
+        //TODO
     }
 
     private void updateLayoutForLandscape() {
-        // Update rootLayout (RelativeLayout)
-        RelativeLayout.LayoutParams rootParams = (RelativeLayout.LayoutParams) rootLayout.getLayoutParams();
-        rootParams.width = RelativeLayout.LayoutParams.MATCH_PARENT;
-        rootParams.height = RelativeLayout.LayoutParams.MATCH_PARENT;
-        rootLayout.setLayoutParams(rootParams);
-
-        // Update LinearLayout (if it exists)
-        LinearLayout linearLayout = findViewById(R.id.linear_layout); // Replace with your LinearLayout ID
-        if (linearLayout != null) {
-            LinearLayout.LayoutParams linearParams = (LinearLayout.LayoutParams) linearLayout.getLayoutParams();
-            linearParams.width = LinearLayout.LayoutParams.MATCH_PARENT;
-            linearParams.height = LinearLayout.LayoutParams.WRAP_CONTENT;
-            linearLayout.setLayoutParams(linearParams);
-            linearLayout.setOrientation(LinearLayout.HORIZONTAL);
-        }
-
-        // Update FrameLayouts (if they exist)
-        FrameLayout frameLayout1 = findViewById(R.id.folderBox1); // Replace with your FrameLayout ID
-        if (frameLayout1 != null) {
-            FrameLayout.LayoutParams frameParams = (FrameLayout.LayoutParams) frameLayout1.getLayoutParams();
-            frameParams.width = 100; // Adjust width as needed
-            frameParams.height = FrameLayout.LayoutParams.MATCH_PARENT;
-            frameLayout1.setLayoutParams(frameParams);
-        }
+        //TODO
     }
 
     public String getFullPathFromTreeUri(Uri uri) {
