@@ -11,10 +11,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> {
 
@@ -43,6 +45,12 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> {
 
         holder.textView.setText(model.getName());
         holder.imageView.setImageResource(model.getImage());
+        int[] colorResIds = {
+                R.color.greyshade1,
+                R.color.greyshade2,
+                R.color.greyshade3,
+                R.color.greyshade4
+        };
 
         // 🔥 Set up the delete button
         holder.deleteButton.setOnClickListener(v -> {
@@ -73,6 +81,10 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> {
                 onItemClickListener.onItemClick(selectedCard);
             }
         });
+        Random random = new Random();
+        int randomColorResId = colorResIds[random.nextInt(colorResIds.length)];
+        int color = ContextCompat.getColor(context, randomColorResId);
+        holder.itemView.setBackgroundColor(color);
     }
 
     @Override

@@ -243,6 +243,7 @@ public class MainActivity extends AppCompatActivity {
                 CardModel newCard = new CardModel(folderName, R.drawable.ic_launcher_foreground, fullFolderPath);
 
                 // Add to list and save
+                cardList.add(newCard);
                 adapter.addCard(newCard);
                 saveCardList();
             }

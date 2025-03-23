@@ -3,4 +3,8 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="Black_transparent">#20000000</color>
+    <color name="greyshade1">#4a4949</color>
+    <color name="greyshade2">#949494</color>
+    <color name="greyshade3">#757474</color>
+    <color name="greyshade4">#595858</color>
 </resources>
