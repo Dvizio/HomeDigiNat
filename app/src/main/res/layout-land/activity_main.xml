@@ -8,92 +8,104 @@
     android:background="@color/Black_transparent"
     tools:context=".MainActivity">
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/rotate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginEnd="20dp"
-        android:layout_marginBottom="20dp"
-        android:clickable="true"
-        app:srcCompat="@android:drawable/ic_menu_save" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/addDirectory"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginStart="20dp"
-        android:layout_marginBottom="20dp"
-        android:clickable="true"
-        app:srcCompat="@android:drawable/ic_menu_add" />
-
+    <!-- Top Battery Indicator -->
     <TextView
         android:id="@+id/batteryLevelText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_marginStart="20dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="10dp"
         android:text="Battery Level"
         android:textColor="#FFFFFF"
         android:textSize="20sp" />
 
+    <!-- RecyclerView - Takes remaining space between battery and buttons -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
+        android:layout_height="0dp"
         android:layout_below="@id/batteryLevelText"
-        android:layout_marginTop="20dp"
-        android:orientation="horizontal"
+        android:layout_above="@id/button_container"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
         tools:listitem="@layout/card_item" />
 
+    <!-- Bottom Container for FABs and Info Boxes -->
     <LinearLayout
+        android:id="@+id/button_container"
         android:layout_width="match_parent"
-        android:id="@+id/linear_layout"
         android:layout_height="wrap_content"
-        android:layout_below="@id/recyclerView"
-        android:layout_marginTop="20dp"
-        android:gravity="center_horizontal"
-        android:orientation="horizontal"
-        android:padding="20dp"
-        android:spacing="20dp">
+        android:layout_alignParentBottom="true"
+        android:orientation="vertical"
+        android:padding="10dp">
 
-        <FrameLayout
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="70dp"
-            android:id="@+id/externalStorageBox"
-            android:layout_margin="10dp"
-            android:background="@drawable/square_box_background">
+        <!-- Info Boxes Row -->
+        <LinearLayout
+            android:id="@+id/linear_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal"
+            android:paddingHorizontal="10dp">
 
-            <TextView
-                android:id="@+id/externalStorageText"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:text="External Storage Disconnected"
-                android:textSize="15sp" />
-        </FrameLayout>
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="70dp"
+                android:layout_marginHorizontal="5dp"
+                android:background="@drawable/square_box_background">
 
-        <FrameLayout
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="70dp"
-            android:layout_margin="10dp"
-            android:background="@drawable/square_box_background">
+                <TextView
+                    android:id="@+id/externalStorageText"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:text="External Storage Disconnected"
+                    android:textSize="15sp" />
+            </FrameLayout>
 
-            <TextView
-                android:id="@+id/storage"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:text="Storage"
-                android:textSize="15sp" />
-        </FrameLayout>
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="70dp"
+                android:layout_marginHorizontal="5dp"
+                android:background="@drawable/square_box_background">
 
+                <TextView
+                    android:id="@+id/storage"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:text="Storage"
+                    android:textSize="15sp" />
+            </FrameLayout>
+        </LinearLayout>
+
+        <!-- FABs Row -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp">
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/addDirectory"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="20dp"
+                android:clickable="true"
+                app:srcCompat="@android:drawable/ic_menu_add" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/rotate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_marginEnd="20dp"
+                android:clickable="true"
+                app:srcCompat="@android:drawable/ic_menu_save" />
+        </RelativeLayout>
     </LinearLayout>
 
 </RelativeLayout>

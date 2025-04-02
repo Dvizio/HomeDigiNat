@@ -95,6 +95,12 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> {
         cardList.add(card);
         notifyItemInserted(cardList.size() - 1);
     }
+    public void updateList(List<CardModel> newCardList) {
+        cardList.clear();
+        cardList.addAll(newCardList);
+        notifyDataSetChanged();
+    }
+
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView textView;

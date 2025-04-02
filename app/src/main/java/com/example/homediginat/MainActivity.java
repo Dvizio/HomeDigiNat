@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.BroadcastReceiver;
@@ -17,6 +18,7 @@ import android.content.pm.PackageManager;
 import java.util.Collections;
 import java.util.Random;
 import android.content.pm.ResolveInfo;
+import android.content.res.Configuration;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.BatteryManager;
@@ -53,7 +55,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     public static final int REQUEST_CODE_PICK_FOLDER = 42;
-    private static final String PREFS_NAME = "myPrefs";
+    private static final String PREFS_NAME = "launcher_prefs";
     private static final String CARD_LIST_KEY = "cardList";
     private RelativeLayout rootLayout;
     private TextView storageInfo ;
@@ -81,13 +83,26 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-
         setContentView(R.layout.activity_main);
+        prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        if (savedInstanceState != null) {
+            // Restore cardList from savedInstanceState
+            String json = savedInstanceState.getString(PREFS_NAME, null);
+            if (json != null) {
+                Type type = new TypeToken<ArrayList<CardModel>>() {}.getType();
+                cardList = gson.fromJson(json, type);
+            }
+        } else {
+            // Load the list from SharedPreferences only if there's no saved state
+            cardList = loadCardList();
+        }
+
+
+
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-        prefs = getSharedPreferences("launcher_prefs", MODE_PRIVATE);
+
         rootLayout = findViewById(R.id.root_layout);
         storageInfo = findViewById(R.id.storage);
         addDirectory = findViewById(R.id.addDirectory);
@@ -95,12 +110,9 @@ public class MainActivity extends AppCompatActivity {
         batteryLevelTextView = findViewById(R.id.batteryLevelText);
         externalStorageText = findViewById(R.id.externalStorageText);
         recyclerView = findViewById(R.id.recyclerView);
-        int numberOfColumns = 2; // Or however many you want
-        recyclerView.setLayoutManager(new GridLayoutManager(this, numberOfColumns));
-        cardList = loadCardList();
         adapter = new CardAdapter(
                 this,
-                new ArrayList<>(cardList),
+                new ArrayList<>(),
                 () -> {
                     saveCardList();
                    // Delete callback, do something when a card is deleted
@@ -112,6 +124,9 @@ public class MainActivity extends AppCompatActivity {
                 }
         );
         recyclerView.setAdapter(adapter);
+        adapter.updateList(cardList);
+        setupRecyclerView();
+
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(
                 ItemTouchHelper.UP | ItemTouchHelper.DOWN | ItemTouchHelper.START | ItemTouchHelper.END, 0) {
 
@@ -128,8 +143,7 @@ public class MainActivity extends AppCompatActivity {
 
                 // Notify adapter of item moved
                 adapter.notifyItemMoved(fromPos, toPos);
-
-                // Optionally, save the updated list here or later when leaving the screen
+                saveCardList();
                 return true;
             }
 
@@ -201,6 +215,33 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void setupRecyclerView() {
+        int orientation = getResources().getConfiguration().orientation;
+
+        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+            // Portrait: 2 columns vertical
+            recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
+        } else {
+            // Landscape: 1 row horizontal
+            GridLayoutManager layoutManager = new GridLayoutManager(this, 1, GridLayoutManager.HORIZONTAL, false);
+            recyclerView.setLayoutManager(layoutManager);
+        }
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        // Save current position before changing layout
+        int currentPosition = ((GridLayoutManager)recyclerView.getLayoutManager())
+                .findFirstVisibleItemPosition();
+
+        setupRecyclerView();
+
+        // Restore position after layout change
+        recyclerView.getLayoutManager().scrollToPosition(currentPosition);
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -252,7 +293,58 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+
+        // Save the scroll position
+        if (recyclerView.getLayoutManager() instanceof GridLayoutManager) {
+            GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
+            int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
+
+            // Save the position in SharedPreferences
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putInt("scroll_position", firstVisibleItemPosition);
+            editor.apply();
+        }
+
+        // Save the card list after rearranging
         saveCardList();
+    }
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        // Save cardList as a JSON string
+        String json = gson.toJson(cardList);
+        outState.putString(PREFS_NAME, json);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        String json = savedInstanceState.getString(PREFS_NAME, null);
+        if (json != null) {
+            Type type = new TypeToken<ArrayList<CardModel>>() {}.getType();
+            List<CardModel> restoredList = gson.fromJson(json, type);
+            if (restoredList != null) {
+                adapter.updateList(restoredList); // ✅ Update adapter with saved list
+            }
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // Reapply the layout manager based on the current orientation
+        setupRecyclerView();
+
+        // Restore the scroll position after reapplying the layout manager
+        if (recyclerView.getLayoutManager() instanceof GridLayoutManager) {
+            GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
+            // Restore the scroll position after the layout manager is applied
+            int scrollPosition = prefs.getInt("scroll_position", 0);
+            layoutManager.scrollToPosition(scrollPosition);
+        }
     }
     private String getFolderName(Uri uri) {
         String docId = DocumentsContract.getTreeDocumentId(uri);
